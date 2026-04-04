@@ -1,0 +1,104 @@
+Based on our discussion, here are your **final implementation goals** for the AI to code:
+
+---
+
+## 🎯 SMARTVOICE FINAL IMPLEMENTATION GOALS
+
+### **CORE ARCHITECTURE**
+1. **100% Offline-First** - All data, embeddings, and processing stored locally on device
+2. **Auto-Persistence** - All sessions automatically saved to disk, auto-loaded on app start
+3. **Complete Data Lifecycle** - "Clear" button removes all files, embeddings, and history
+
+---
+
+### **FEATURE 1: PROACTIVE VOICE ENROLLMENT (VOICEPRINTS)**
+- Enroll speakers with 3-5 audio samples (10-30s each)
+- Extract x-vector/ECAPA-TDNN embeddings locally using ONNX Runtime
+- Store voiceprints as 192-dim vectors in local JSON/SQLite
+- Identify speakers in real-time during transcription
+- Re-enrollment capability to improve accuracy over time
+- Cross-session persistence (voiceprints survive app restarts)
+
+---
+
+### **FEATURE 2: D.O.D. (DATA-ORIENTED DIARIZATION) ENFORCEMENT**
+- Confidence-weighted speaker assignment (voiceprint + acoustic clustering)
+- Temporal continuity rules (same speaker unlikely <1.5s gap)
+- Uncertainty labeling with "?" when confidence <0.75
+- Fallback to acoustic clustering when voiceprint match fails
+- Resolve fuzzy speaker IDs using enrolled voiceprints as ground truth
+
+---
+
+### **FEATURE 3: REAL-TIME "MARK IMPORTANT" BUTTON**
+- Hotkey (Ctrl+Space) or UI button to bookmark current timestamp
+- Visual flags on waveform/timeline
+- Store bookmarks with timestamp, transcript snippet, and custom tags
+- Sidebar panel showing all bookmarks with jump-to-time
+- Export highlights as clips or summary
+- Persist bookmarks to local disk with session data
+
+---
+
+### **FEATURE 4: SEMANTIC SEARCH (EXTRACTIVE, NOT RAG)**
+- Local Sentence-BERT embeddings (ONNX format, no API calls)
+- FAISS or brute-force cosine similarity search (both local)
+- Returns actual transcript segments with timestamps, not generated text
+- Hybrid mode: semantic first, keyword fallback if no good matches
+- Context window: show 2 segments before/after for context
+- Search across all sessions or filter by specific session
+- 100% offline - no cloud vector DB
+
+---
+
+### **FEATURE 5: OFFLINE DATA MANAGEMENT**
+- **Storage locations:**
+  - `~/.smartvoice/sessions/` - Audio files, transcripts, metadata
+  - `~/.smartvoice/embeddings/` - Voiceprints and semantic index
+  - `~/.smartvoice/bookmarks/` - Important moment markers
+- **Auto-load on startup:** Read all session folders, populate sidebar history
+- **Clear all data:** Delete entire `~/.smartvoice/` directory + clear memory
+- **Export:** Zip session data for backup/portability
+
+---
+
+### **TECH STACK REQUIREMENTS**
+| Component | Technology | Reason |
+|-----------|-----------|--------|
+| Embeddings | ONNX Runtime + Sentence-BERT | Local inference, no API |
+| Voice Biometrics | SpeechBrain ECAPA-TDNN (ONNX) | State-of-the-art, offline |
+| Vector Search | FAISS (CPU) or brute-force cosine | Local similarity search |
+| Database | SQLite or JSON files | Zero external dependencies |
+| Audio Processing | faster-whisper (local) | Already in your stack |
+
+---
+
+### **UI/UX REQUIREMENTS**
+- **Sidebar:** Shows all past sessions with date, duration, speaker count
+- **Click session:** Loads full transcript, bookmarks, and metadata
+- **Search bar:** Toggle "Smart" (semantic) vs "Exact" (keyword)
+- **Bookmark button:** Always visible during playback/recording
+- **Voice enrollment panel:** "Enroll New Speaker" → record samples → name → save
+- **Clear button:** "Clear All Data" with confirmation → wipes everything
+
+---
+
+### **PRIVACY & OFFLINE GUARANTEES**
+- [ ] No network calls for any AI/ML (embeddings, transcription, diarization)
+- [ ] No cloud storage or sync
+- [ ] All models run locally via ONNX
+- [ ] Data encrypted at rest (optional but recommended)
+- [ ] Works without internet connection
+
+---
+
+### **SUCCESS CRITERIA**
+1. Record audio → close app → reopen → session appears in sidebar
+2. Enroll speaker voice → process new audio → speaker correctly identified by name
+3. Search "budget cuts" → finds segment saying "financial reductions" with timestamp
+4. Mark important moment → bookmark appears in sidebar → click jumps to exact time
+5. Click Clear → all files deleted → sidebar empty → fresh start
+
+---
+
+**Deliver to your AI coder as:** "Implement these 5 features with 100% offline local storage, auto-persistence, and the specified tech stack."

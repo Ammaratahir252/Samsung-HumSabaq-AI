@@ -1,0 +1,45 @@
+# SmartVoice - Requirements
+# Agent-based Audio Processing System
+
+# LangGraph & LangChain
+langgraph>=0.0.50
+langchain>=0.1.0
+langchain-core>=0.1.0
+
+# Audio Processing
+numpy>=1.24.0
+scipy>=1.10.0
+sounddevice>=0.4.6
+soundfile>=0.12.0
+pydub>=0.25.1
+librosa>=0.10.0
+noisereduce>=3.0.0
+
+# Speech-to-Text
+faster-whisper>=0.10.0
+
+# Speaker Diarization
+pyannote.audio>=3.0.0
+torch>=2.0.0
+torchaudio>=2.0.0
+speechbrain>=0.5.16
+av>=10.0.0
+
+# LLM Summarization
+transformers>=4.30.0
+requests>=2.31.0
+
+# Offline embeddings (ONNX)
+onnxruntime>=1.16.0
+
+# Clustering
+scikit-learn>=1.2.0
+
+# Text-to-Speech
+pyttsx3>=2.90
+
+# Web Interface
+flask>=3.0.0
+
+# Utilities
+python-dotenv>=1.0.0
