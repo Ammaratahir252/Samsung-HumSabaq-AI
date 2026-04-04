@@ -1,0 +1,12 @@
+{
+  "name": "humsabaq-platform-launcher",
+  "version": "1.0.0",
+  "description": "Unified launcher for HumSabaq AI Suite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
