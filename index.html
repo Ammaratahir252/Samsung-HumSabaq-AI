@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--sidebar:#111;--surface:#1a1a1a;--surface2:#222;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#ececec;--text2:#888;--text3:#444;
+  --accent:#5b9cf6;--accent-g:linear-gradient(135deg,#5b9cf6,#a78bfa);
+  --green:#22c55e;--purple:#a78bfa;--red:#ef4444;
+  --sans:'Geist',system-ui,sans-serif;--mono:'Geist Mono',monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;font-size:15px}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:260px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh}
+.sidebar-top{padding:18px 14px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--accent-g);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+.new-btn{width:100%;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text);font-family:var(--sans);font-size:13px;cursor:pointer;transition:background .15s}
+.new-btn:hover{background:var(--surface)}
+.new-btn svg{opacity:.6;flex-shrink:0}
+
+/* History list */
+.history-wrap{flex:1;overflow-y:auto;padding:10px 10px 0}
+.history-wrap::-webkit-scrollbar{width:3px}
+.history-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.history-section-label{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:8px 6px 4px}
+
+.hist-item{display:flex;align-items:center;gap:0;border-radius:9px;margin-bottom:2px;cursor:pointer;transition:background .12s;position:relative;group:true}
+.hist-item:hover{background:var(--surface)}
+.hist-item.active{background:var(--surface2)}
+.hist-item-body{flex:1;padding:8px 10px;min-width:0}
+.hist-title{font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+.hist-meta{font-size:10.5px;color:var(--text3);margin-top:2px}
+.hist-delete{width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:none;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;transition:all .12s;font-size:13px}
+.hist-item:hover .hist-delete{display:flex}
+.hist-delete:hover{background:rgba(239,68,68,.15);color:var(--red)}
+
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);flex-shrink:0}
+.status-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#555;flex-shrink:0;transition:background .3s}
+.status-dot.online{background:var(--green);box-shadow:0 0 6px #22c55e88}
+.status-dot.error{background:var(--red)}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar-title{font-size:13.5px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
+.mode-badge{font-size:11px;padding:3px 9px;border-radius:99px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);display:none;flex-shrink:0}
+.mode-badge.show{display:inline-block}
+.topbar-actions{display:flex;gap:6px;flex-shrink:0}
+.icon-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.icon-btn:hover{border-color:var(--border2);color:var(--text2);background:var(--surface)}
+.icon-btn.danger:hover{border-color:rgba(239,68,68,.4);color:var(--red)}
+
+/* Messages */
+#messages{flex:1;overflow-y:auto;padding:24px 0;scroll-behavior:smooth;display:none;flex-direction:column}
+#messages::-webkit-scrollbar{width:100%}
+#messages::-webkit-scrollbar-thumb{background:#222;border-radius:3px}
+.msg-wrapper{padding:2px 0;animation:fadeUp .18s ease forwards;opacity:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg-row{max-width:760px;margin:0 auto;padding:0 22px;display:flex;gap:12px;align-items:flex-start}
+.msg-row.user{flex-direction:row-reverse}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:3px}
+.avatar.ai-av{background:var(--accent-g);color:#fff;font-size:13px}
+.avatar.user-av{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.bubble{max-width:calc(100% - 44px);padding:11px 15px;border-radius:15px;font-size:14px;line-height:1.75;word-break:break-word}
+.msg-row.user .bubble{background:var(--surface);border:1px solid var(--border2);border-top-right-radius:4px}
+.msg-row.ai .bubble{background:transparent;padding-left:0;border-top-left-radius:4px}
+.bubble p{margin:0 0 9px}.bubble p:last-child{margin-bottom:0}
+.bubble h1,.bubble h2,.bubble h3{font-weight:600;margin:14px 0 7px;letter-spacing:-.2px}
+.bubble h1{font-size:17px}.bubble h2{font-size:15px}.bubble h3{font-size:14px}
+.bubble ul,.bubble ol{margin:7px 0 7px 20px}.bubble li{margin:3px 0}
+.bubble strong{color:#fff;font-weight:600}
+.bubble code{font-family:var(--mono);font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:1px 6px;color:var(--purple)}
+.bubble pre{background:#141414;border:1px solid var(--border);border-radius:10px;padding:12px 15px;overflow-x:auto;margin:9px 0}
+.bubble pre code{background:none;border:none;padding:0;color:var(--text2);font-size:12.5px}
+.bubble table{border-collapse:collapse;width:100%;margin:9px 0;font-size:13px}
+.bubble th,.bubble td{border:1px solid var(--border);padding:7px 11px}
+.bubble th{background:var(--surface);font-weight:500}
+.bubble hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.thinking{display:flex;gap:4px;padding:12px 0;align-items:center}
+.thinking span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:think 1.2s infinite}
+.thinking span:nth-child(2){animation-delay:.15s}.thinking span:nth-child(3){animation-delay:.3s}
+@keyframes think{0%,60%,100%{transform:scale(1);opacity:.4}30%{transform:scale(1.3);opacity:1}}
+
+/* Flashcards */
+.flashcard-wrap{perspective:1000px;margin:7px 0;cursor:pointer}
+.flashcard{width:100%;min-height:90px;position:relative;transform-style:preserve-3d;transition:transform .4s ease;border-radius:11px}
+.flashcard.flipped{transform:rotateY(180deg)}
+.flashcard-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;overflow: hidden}
+.flashcard-front{background:var(--surface);border:1px solid var(--border2)}
+.flashcard-back{background:#1a163a;border:1px solid #2d2560;transform:rotateY(180deg)}
+.fc-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:7px}
+.fc-text{font-size:14px;line-height:1.6;word-break: break-word;overflow-y: auto;max-height: 100%}
+.fc-hint{font-size:11px;color:var(--text3);margin-top:9px}
+
+/* Welcome */
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center}
+.welcome-icon{width:64px;height:64px;border-radius:18px;background:var(--accent-g);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.welcome-title{font-size:24px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px;background:linear-gradient(135deg,#fff 40%,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome-sub{font-size:14px;color:var(--text2);max-width:360px;line-height:1.7;margin-bottom:28px}
+.suggestions{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-width:500px;width:100%}
+.sug-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 15px;text-align:left;cursor:pointer;transition:all .15s;font-family:var(--sans);color:var(--text2);font-size:12.5px;line-height:1.5}
+.sug-card:hover{background:var(--surface2);border-color:var(--border2);color:var(--text);transform:translateY(-1px)}
+.sug-card-title{font-size:12.5px;font-weight:500;color:var(--text);margin-bottom:3px}
+
+/* Input */
+.input-area{padding:14px 22px 18px;flex-shrink:0}
+.input-box{max-width:760px;margin:0 auto;background:var(--surface);border:1px solid var(--border2);border-radius:15px;transition:border-color .2s,box-shadow .2s;overflow:hidden}
+.input-box:focus-within{border-color:rgba(91,156,246,.4);box-shadow:0 0 0 3px rgba(91,156,246,.07)}
+.file-pill{display:none;align-items:center;gap:8px;padding:9px 13px 0}
+.file-pill.show{display:flex}
+.file-pill-inner{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 9px;font-size:12px;color:var(--text2);max-width:260px}
+.file-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.file-pill-remove{cursor:pointer;color:var(--text3);font-size:13px;line-height:1;padding:0 2px;transition:color .15s;flex-shrink:0}
+.file-pill-remove:hover{color:var(--red)}
+.upload-progress{display:none;align-items:center;gap:10px;padding:9px 13px 0;font-size:12px;color:var(--text2)}
+.upload-progress.show{display:flex}
+.progress-track{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:var(--accent);width:0%;transition:width .4s ease;border-radius:2px}
+.input-row{display:flex;align-items:flex-end;padding:9px 11px 9px 13px;gap:7px}
+#q-input{flex:1;background:transparent;border:none;outline:none;font-family:var(--sans);font-size:14px;color:var(--text);resize:none;min-height:24px;max-height:160px;line-height:1.6;padding:0}
+#q-input::placeholder{color:var(--text3)}
+#q-input:disabled{opacity:.4}
+.input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.attach-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;flex-shrink:0}
+.attach-btn:hover{background:var(--surface2);border-color:var(--border2);color:var(--text2)}
+.attach-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#send-btn{width:32px;height:32px;border-radius:8px;border:none;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
+#send-btn:hover{background:#4a8de8;transform:scale(1.05)}
+#send-btn:active{transform:scale(.97)}
+#send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.input-hint{text-align:center;font-size:11px;color:var(--text3);margin-top:8px;max-width:760px;margin-left:auto;margin-right:auto}
+
+/* Feature buttons in sidebar */
+.feat-section{padding:10px 10px 6px;border-bottom:1px solid var(--border);flex-shrink:0;display:none}
+.feat-section.show{display:block}
+.feat-label{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;padding:0 2px}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.feat-btn{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--sans);font-size:11.5px;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+.feat-btn:hover,.feat-btn.active{background:var(--surface);border-color:var(--border2);color:var(--text)}
+.feat-icon{font-size:14px;flex-shrink:0}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;border:1px solid var(--border2);color:var(--text2);border-radius:10px;padding:9px 16px;font-size:12.5px;white-space:nowrap;opacity:0;transition:all .2s;z-index:999;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.error{border-color:rgba(239,68,68,.4);color:#fca5a5;background:#1f1010}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo">
+      <div class="logo-mark">📚</div>
+      <div><div class="logo-text">Document Manager</div><div class="logo-sub">Local · No limits</div></div>
+    </div>
+    <button class="new-btn" onclick="newSession()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      New session
+    </button>
+  </div>
+
+  <!-- Active session feature buttons -->
+  <div class="feat-section" id="feat-section">
+    <div class="feat-label">Features</div>
+    <div class="feat-grid">
+      <button class="feat-btn active" id="btn-qa" onclick="setMode('qa')"><span class="feat-icon">💬</span> Q&amp;A</button>
+      <button class="feat-btn" id="btn-summary" onclick="triggerSummary()"><span class="feat-icon">📋</span> Summary</button>
+      <button class="feat-btn" id="btn-quiz" onclick="triggerQuiz()"><span class="feat-icon">🧠</span> Quiz</button>
+      <button class="feat-btn" id="btn-flashcards" onclick="triggerFlashcards()"><span class="feat-icon">🃏</span> Cards</button>
+    </div>
+  </div>
+
+  <!-- Chat history -->
+  <div class="history-wrap" id="history-wrap">
+    <div class="history-section-label">Recent chats</div>
+    <div id="history-list"><div style="font-size:12px;color:var(--text3);padding:6px 6px">No chats yet</div></div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="status-row">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Checking Ollama…</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title" id="topbar-title">New session</span>
+      <span class="mode-badge" id="mode-badge">Q&A</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="clearChat()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <div id="welcome">
+    <div class="welcome-icon">📚</div>
+    <div class="welcome-title">Document Manager</div>
+    <div class="welcome-sub">Upload any document and unlock Q&amp;</div>
+    <div class="suggestions">
+      <div class="sug-card" onclick="triggerUpload()"><div class="sug-card-title">💬 Ask questions</div>Chat with your document</div>
+      <div class="sug-card" onclick="triggerUpload()"><div class="sug-card-title">📋 Get a summary</div>Key points in seconds</div>
+      <div class="sug-card" onclick="triggerUpload()"><div class="sug-card-title">🧠 Take a quiz</div>Test your knowledge</div>
+      <div class="sug-card" onclick="triggerUpload()"><div class="sug-card-title">🃏 Flashcards</div>Click-to-flip study cards</div>
+    </div>
+  </div>
+
+  <div id="messages"></div>
+
+  <div class="input-area">
+    <div class="input-box" id="input-box" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+      <div class="upload-progress" id="upload-progress">
+        <span id="upload-label">Reading file…</span>
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+      <div class="file-pill" id="file-pill">
+        <div class="file-pill-inner">
+          <span id="pill-icon">📄</span>
+          <span class="file-pill-name" id="pill-name">—</span>
+          <span class="file-pill-remove" onclick="newSession()" title="Remove">✕</span>
+        </div>
+      </div>
+      <div class="input-row">
+        <textarea id="q-input" placeholder="Ask anything about your document… (Enter to send)" rows="1" disabled onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+        <div class="input-actions">
+          <button class="attach-btn" title="Attach document">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13.5 7.5l-6.5 6.5a4 4 0 01-5.657-5.657l7-7a2.5 2.5 0 013.535 3.536l-6.293 6.293a1 1 0 01-1.414-1.414L10.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input type="file" id="file-input" onchange="handleFile(this.files[0])">
+          </button>
+          <button id="send-btn" onclick="sendQ()" disabled>
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M7.5 13V2M2 7.5L7.5 2L13 7.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="input-hint">100% local via Ollama · History saved in MongoDB · No API limits</div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+marked.setOptions({breaks:true,gfm:true});
+let sessionId=null,isLoading=false,currentFile=null;
+
+// ── Ollama status ──────────────────────────────────────────
+async function checkOllama(){
+  try{
+    const r=await fetch("/ollama-status");const d=await r.json();
+    const dot=document.getElementById("status-dot"),txt=document.getElementById("status-text");
+    if(d.running&&d.hasModel){dot.className="status-dot online";txt.textContent="Ollama · llama3.2 ready";}
+    else{dot.className="status-dot error";txt.textContent="Ollama not running";}
+  }catch(e){document.getElementById("status-dot").className="status-dot error";document.getElementById("status-text").textContent="Ollama offline";}
+}
+checkOllama();setInterval(checkOllama,15000);
+
+// ── Load history sidebar ───────────────────────────────────
+async function loadHistory(){
+  try{
+    const r=await fetch("/sessions");const sessions=await r.json();
+    const list=document.getElementById("history-list");
+    if(!sessions.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 6px">No chats yet</div>';return;}
+    
+    // Group by date
+    const today=new Date();today.setHours(0,0,0,0);
+    const yesterday=new Date(today);yesterday.setDate(today.getDate()-1);
+    const groups={Today:[],Yesterday:[],Earlier:[]};
+    sessions.forEach(s=>{
+      const d=new Date(s.updatedAt);d.setHours(0,0,0,0);
+      if(d>=today)groups.Today.push(s);
+      else if(d>=yesterday)groups.Yesterday.push(s);
+      else groups.Earlier.push(s);
+    });
+
+    let html="";
+    for(const [label,items] of Object.entries(groups)){
+      if(!items.length)continue;
+      html+=`<div class="history-section-label">${label}</div>`;
+      items.forEach(s=>{
+        const isActive=s.sessionId===sessionId;
+        const title=s.title||s.fileName||"Untitled";
+        const meta=s.fileName||"";
+        html+=`<div class="hist-item${isActive?" active":""}" onclick="loadSession('${s.sessionId}')" data-sid="${s.sessionId}">
+          <div class="hist-item-body">
+            <div class="hist-title">${escHtml(title)}</div>
+            <div class="hist-meta">${escHtml(meta)}</div>
+          </div>
+          <button class="hist-delete" onclick="deleteSession(event,'${s.sessionId}')" title="Delete">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>`;
+      });
+    }
+    list.innerHTML=html;
+  }catch(e){console.error("History load failed",e);}
+}
+loadHistory();
+
+// ── Load a past session ────────────────────────────────────
+async function loadSession(sid){
+  if(sid===sessionId)return;
+  try{
+    const r=await fetch("/sessions/"+sid);
+    const session=await r.json();
+    if(!r.ok)throw new Error(session.error||"Failed");
+
+    sessionId=session.sessionId;
+    currentFile=session.fileName;
+
+    // Update UI
+    document.getElementById("welcome").style.display="none";
+    const msgs=document.getElementById("messages");
+    msgs.style.display="flex";msgs.style.flexDirection="column";
+    msgs.innerHTML="";
+
+    // Restore messages
+    session.history.forEach(h=>{
+      addMsg(h.role==="user"?"user":"ai", h.text);
+    });
+
+    // Update topbar & sidebar
+    document.getElementById("topbar-title").textContent=session.fileName||"Session";
+    document.getElementById("mode-badge").textContent="Q&A";
+    document.getElementById("mode-badge").classList.add("show");
+    document.getElementById("feat-section").classList.add("show");
+    document.getElementById("file-pill").classList.add("show");
+    document.getElementById("pill-icon").textContent=iconForExt((session.fileName||"").split(".").pop().toLowerCase());
+    document.getElementById("pill-name").textContent=session.fileName||"—";
+    document.getElementById("q-input").disabled=false;
+    document.getElementById("send-btn").disabled=false;
+
+    // Highlight active in history
+    document.querySelectorAll(".hist-item").forEach(el=>{
+      el.classList.toggle("active",el.dataset.sid===sid);
+    });
+
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){showToast("Failed to load session",true);}
+}
+
+// ── Delete session ─────────────────────────────────────────
+async function deleteSession(e,sid){
+  e.stopPropagation();
+  await fetch("/sessions/"+sid,{method:"DELETE"});
+  if(sid===sessionId)newSession();
+  loadHistory();
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function escHtml(t){return(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function triggerUpload(){document.getElementById("file-input").click();}
+function onDrag(e,over){e.preventDefault();document.getElementById("input-box").style.borderColor=over?"rgba(91,156,246,.5)":"";}
+function onDrop(e){e.preventDefault();onDrag(e,false);const f=e.dataTransfer.files[0];if(f)handleFile(f);}
+function iconForExt(e){return{pdf:"📕",docx:"📝",doc:"📝",xlsx:"📊",xls:"📊",csv:"📋",txt:"📄",json:"🔧",md:"📄",py:"💻",js:"💻"}[e]||"📄";}
+function fmtSize(b){return b>1048576?(b/1048576).toFixed(1)+" MB":Math.round(b/1024)+" KB";}
+
+// ── Upload ─────────────────────────────────────────────────
+async function handleFile(file){
+  if(!file)return;
+  const ext=file.name.split(".").pop().toLowerCase(),icon=iconForExt(ext);
+  sessionId=Date.now().toString();currentFile=file.name;
+  const up=document.getElementById("upload-progress"),pb=document.getElementById("progress-bar");
+  document.getElementById("upload-label").textContent="Reading "+file.name+"…";
+  up.classList.add("show");pb.style.width="25%";
+  try{
+    const form=new FormData();form.append("file",file);pb.style.width="60%";
+    const res=await fetch("/upload",{method:"POST",headers:{"x-session-id":sessionId},body:form});
+    pb.style.width="100%";const data=await res.json();
+    if(!res.ok)throw new Error(data.error||"Upload failed");
+    setTimeout(()=>{up.classList.remove("show");pb.style.width="0%";},400);
+    document.getElementById("file-pill").classList.add("show");
+    document.getElementById("pill-icon").textContent=icon;
+    document.getElementById("pill-name").textContent=file.name;
+    document.getElementById("feat-section").classList.add("show");
+    document.getElementById("welcome").style.display="none";
+    const msgs=document.getElementById("messages");msgs.style.display="flex";msgs.style.flexDirection="column";
+    document.getElementById("q-input").disabled=false;
+    document.getElementById("send-btn").disabled=false;
+    document.getElementById("topbar-title").textContent=file.name;
+    document.getElementById("mode-badge").textContent="Q&A";
+    document.getElementById("mode-badge").classList.add("show");
+    addMsg("ai","**"+file.name+"** loaded! Ask a question, or use the feature buttons on the left.");
+    document.getElementById("q-input").focus();
+    loadHistory();
+  }catch(err){up.classList.remove("show");pb.style.width="0%";showToast(err.message,true);}
+  document.getElementById("file-input").value="";
+}
+
+// ── Mode ───────────────────────────────────────────────────
+function setMode(m){
+  ["qa","summary","quiz","flashcards"].forEach(x=>document.getElementById("btn-"+x)?.classList.remove("active"));
+  document.getElementById("btn-"+m)?.classList.add("active");
+  document.getElementById("mode-badge").textContent={qa:"Q&A",summary:"Summary",quiz:"Quiz",flashcards:"Flashcards"}[m]||m;
+}
+
+// ── Messages ───────────────────────────────────────────────
+function addMsg(role,text,isHTML){
+  const msgs=document.getElementById("messages");
+  const w=document.createElement("div");w.className="msg-wrapper";
+  const row=document.createElement("div");row.className="msg-row "+role;
+  const av=document.createElement("div");av.className="avatar "+(role==="user"?"user-av":"ai-av");av.textContent=role==="user"?"U":"📚";
+  const bubble=document.createElement("div");bubble.className="bubble";
+  bubble.innerHTML=isHTML?text:marked.parse(text);
+  row.appendChild(av);row.appendChild(bubble);w.appendChild(row);msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;
+}
+function addThinking(id){
+  const msgs=document.getElementById("messages");
+  const w=document.createElement("div");w.className="msg-wrapper";w.id=id||"thinking";
+  w.innerHTML='<div class="msg-row ai"><div class="avatar ai-av">📚</div><div class="bubble"><div class="thinking"><span></span><span></span><span></span></div></div></div>';
+  msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── Q&A ────────────────────────────────────────────────────
+function onKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendQ();}}
+function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,160)+"px";}
+
+async function sendQ(){
+  const inp=document.getElementById("q-input");const q=inp.value.trim();
+  if(!q||isLoading||!sessionId)return;
+  isLoading=true;inp.value="";inp.style.height="auto";
+  document.getElementById("send-btn").disabled=true;
+  addMsg("user",q);addThinking();
+  try{
+    // Streaming fetch — words appear as they are generated
+    await streamFetch("/ask",{sessionId,question:q},"thinking",null,()=>{loadHistory();});
+  }catch(err){document.getElementById("thinking")?.remove();addMsg("ai","⚠️ "+err.message);showToast(err.message,true);}
+  isLoading=false;document.getElementById("send-btn").disabled=false;inp.focus();
+}
+
+// ── Shared streaming helper ────────────────────────────────
+async function streamFetch(endpoint,body,thinkingId,onDoneRender,onDoneCallback){
+  const el=document.getElementById(thinkingId);
+  el?.remove();
+  // Create a streaming message bubble
+  const msgEl=document.createElement("div");
+  msgEl.className = "msg-wrapper"; // Use the existing wrapper class
+  msgEl.innerHTML = `
+  <div class="msg-row ai">
+    <div class="avatar ai-av">📚</div>
+    <div class="bubble">
+      <div class="streaming-text"></div>
+    </div>
+  </div>`;
+  document.getElementById("messages").appendChild(msgEl);
+  const textEl=msgEl.querySelector(".streaming-text");
+  document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
+
+  let fullText="";
+  try{
+    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const reader=res.body.getReader();const decoder=new TextDecoder();
+    let buf="";
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const parts=buf.split("\n\n");buf=parts.pop();
+      for(const part of parts){
+        if(!part.startsWith("data:"))continue;
+        try{
+          const json=JSON.parse(part.slice(5).trim());
+          if(json.token){fullText+=json.token;textEl.textContent=fullText;document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;}
+          if(json.error)throw new Error(json.error);
+        }catch{}
+      }
+    }
+    // Replace streaming bubble with rendered output
+    if(onDoneRender){msgEl.remove();onDoneRender(fullText);}
+    else{
+      // Render markdown-ish formatting
+      textEl.innerHTML=fullText.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");
+    }
+    if(onDoneCallback)onDoneCallback();
+  }catch(err){textEl.textContent="⚠️ "+err.message;showToast(err.message,true);}
+}
+
+// ── Summary ────────────────────────────────────────────────
+async function triggerSummary(){
+  if(!sessionId||isLoading)return;setMode("summary");isLoading=true;
+  addMsg("user","📋 Summarize this document");addThinking("t-sum");
+  try{
+    await streamFetch("/summary",{sessionId},"t-sum",null,()=>{loadHistory();});
+  }catch(err){document.getElementById("t-sum")?.remove();addMsg("ai","⚠️ "+err.message);showToast(err.message,true);}
+  isLoading=false;setMode("qa");
+}
+
+// ── Quiz ───────────────────────────────────────────────────
+async function triggerQuiz(){
+  if(!sessionId||isLoading)return;setMode("quiz");isLoading=true;
+  addMsg("user","🧠 Generate a quiz from this document");addThinking("t-quiz");
+  try{
+    await streamFetch("/quiz",{sessionId},"t-quiz",null,()=>{loadHistory();});
+  }catch(err){document.getElementById("t-quiz")?.remove();addMsg("ai","⚠️ "+err.message);showToast(err.message,true);}
+  isLoading=false;setMode("qa");
+}
+
+// ── Flashcards ─────────────────────────────────────────────
+async function triggerFlashcards(){
+  if(!sessionId||isLoading)return;setMode("flashcards");isLoading=true;
+  addMsg("user","🃏 Generate flashcards from this document");addThinking("t-fc");
+  try{
+    await streamFetch("/flashcards",{sessionId},"t-fc",(raw)=>{renderFlashcards(raw);},()=>{loadHistory();});
+  }catch(err){document.getElementById("t-fc")?.remove();addMsg("ai","⚠️ "+err.message);showToast(err.message,true);}
+  isLoading=false;setMode("qa");
+}
+
+function renderFlashcards(raw){
+  const cards=[];let cur={};
+  for(const line of raw.split("\n")){
+    const l=line.trim();
+    if(/^\*?\*?front:?\*?\*?/i.test(l))cur.front=l.replace(/^\*?\*?front:?\*?\*?\s*/i,"").trim();
+    else if(/^\*?\*?back:?\*?\*?/i.test(l)){cur.back=l.replace(/^\*?\*?back:?\*?\*?\s*/i,"").trim();if(cur.front&&cur.back){cards.push({...cur});cur={};}}
+  }
+  if(!cards.length){addMsg("ai",raw);return;}
+  let html=`<div style="display:flex;flex-direction:column;gap:9px;width:100%"><p style="font-size:12.5px;color:var(--text2);margin-bottom:3px">🃏 ${cards.length} flashcards — click each to flip</p>`;
+  cards.forEach((card,i)=>{
+    html+=`<div class="flashcard-wrap" onclick="this.querySelector('.flashcard').classList.toggle('flipped')" style="min-height:80px">
+      <div class="flashcard">
+        <div class="flashcard-face flashcard-front"><div class="fc-label">Card ${i+1} · Front</div><div class="fc-text">${escHtml(card.front)}</div><div class="fc-hint">Click to reveal →</div></div>
+        <div class="flashcard-face flashcard-back"><div class="fc-label">Card ${i+1} · Back</div><div class="fc-text">${escHtml(card.back)}</div></div>
+      </div></div>`;
+  });
+  html+=`</div>`;addMsg("ai",html,true);
+}
+
+// ── Clear & Reset ──────────────────────────────────────────
+async function clearChat(){
+  if(!sessionId)return;
+  await fetch("/clear",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId})});
+  document.getElementById("messages").innerHTML="";
+  addMsg("ai","Chat cleared. Ask me anything about **"+currentFile+"**.");
+}
+
+function newSession(){
+  sessionId=null;currentFile=null;
+  document.getElementById("messages").innerHTML="";
+  document.getElementById("messages").style.display="none";
+  document.getElementById("welcome").style.display="flex";
+  document.getElementById("file-pill").classList.remove("show");
+  document.getElementById("feat-section").classList.remove("show");
+  document.getElementById("q-input").disabled=true;
+  document.getElementById("send-btn").disabled=true;
+  document.getElementById("topbar-title").textContent="New session";
+  document.getElementById("mode-badge").classList.remove("show");
+  document.getElementById("file-input").value="";
+  // Deactivate all history items
+  document.querySelectorAll(".hist-item").forEach(el=>el.classList.remove("active"));
+}
+
+function showToast(msg,isErr){
+  const t=document.getElementById("toast");t.textContent=msg;
+  t.className="show"+(isErr?" error":"");setTimeout(()=>t.className="",3500);
+}
+</script>
+</body>
+</html>

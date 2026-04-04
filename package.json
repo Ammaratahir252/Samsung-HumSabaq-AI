@@ -1,0 +1,20 @@
+{
+  "name": "humsabaq-ai",
+  "version": "1.0.0",
+  "description": "HumSabaq AI - Document Intelligence Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "mammoth": "^1.6.0",
+    "mongoose": "^9.3.3",
+    "multer": "^1.4.5-lts.1",
+    "open": "^10.1.0",
+    "pdf-parse": "^1.1.1",
+    "xlsx": "^0.18.5"
+  }
+}
