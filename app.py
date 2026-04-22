@@ -1,7 +1,4 @@
-"""
-SmartVoice - Web Interface
-Production-ready UI for the agent-based audio processing system.
-"""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -152,8 +149,8 @@ def create_app() -> Flask:
 
         model_size = request.form.get("model_size", "small")
         language = "auto"
-        enable_diarization = True
-        enable_noise_reduction = request.form.get("noise_reduction", "true").lower() == "true"
+        enable_diarization = False
+        enable_noise_reduction = request.form.get("noise_reduction", "false").lower() == "true"
 
         result = process_audio(
             audio_path=str(audio_path),

@@ -1,0 +1,23 @@
+{
+  "session_id": "5d46bae5",
+  "timestamp": "2026-04-22T14:49:07.005656",
+  "language": "hi",
+  "speakers": 1,
+  "segments": 9,
+  "bullets": [
+    "The speaker expressed concerns about the relation between SOS Alert and SMS Service.",
+    "The speaker stated that both services should be separate, not integrated.",
+    "The speaker emphasized the importance of maintaining direct relations between SOS Alert and User, as well as SMS Service and User.",
+    "The speaker noted that integrating these services would lead to two \"boxe\" with negative consequences."
+  ],
+  "keywords": [
+    "service",
+    "sos",
+    "alert",
+    "sms",
+    "voice",
+    "relation",
+    "user",
+    "direct"
+  ]
+}
