@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumSabaq AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: #222222;
+  --border2: #2e2e2e;
+  --text: #f0f0f0;
+  --text2: #888888;
+  --text3: #444444;
+  --white: #ffffff;
+}
+
+html, body { height: 100%; background: var(--bg); }
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(8,8,8,0.95);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo {
+  width: 28px;
+  height: 28px;
+  background: var(--white);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-logo svg {
+  width: 15px;
+  height: 15px;
+  fill: #080808;
+}
+
+.nav-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+/* ── MAIN ── */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+}
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.header-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-size: clamp(32px, 4.5vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.header p {
+  font-size: 15px;
+  color: var(--text2);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* ── CARDS GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 960px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  padding: 36px 32px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  transition: background 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.card-1::before { background: linear-gradient(90deg, transparent, #6366f1, transparent); }
+.card-2::before { background: linear-gradient(90deg, transparent, #0ea5e9, transparent); }
+.card-3::before { background: linear-gradient(90deg, transparent, #a855f7, transparent); }
+
+.card:hover { background: var(--surface2); }
+.card:hover::before { opacity: 1; }
+
+/* Number */
+.card-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  margin-bottom: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Icon */
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.card-1 .card-icon { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); }
+.card-2 .card-icon { background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.2); }
+.card-3 .card-icon { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.2); }
+
+.card-icon svg { width: 20px; height: 20px; }
+.card-1 .card-icon svg { stroke: #818cf8; }
+.card-2 .card-icon svg { stroke: #38bdf8; }
+.card-3 .card-icon svg { stroke: #c084fc; }
+
+/* Text */
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+  font-weight: 400;
+  flex: 1;
+  margin-bottom: 28px;
+}
+
+/* Features */
+.card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.feat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.feat-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card-1 .feat-dot { background: #6366f1; }
+.card-2 .feat-dot { background: #0ea5e9; }
+.card-3 .feat-dot { background: #a855f7; }
+
+/* Open button */
+.card-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  background: transparent;
+  transition: border-color 0.2s, color 0.2s;
+  margin-top: auto;
+}
+
+.card:hover .card-cta {
+  color: var(--white);
+}
+
+.card-1:hover .card-cta { border-color: rgba(99,102,241,0.5); }
+.card-2:hover .card-cta { border-color: rgba(14,165,233,0.5); }
+.card-3:hover .card-cta { border-color: rgba(168,85,247,0.5); }
+
+.cta-arrow {
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+.card:hover .cta-arrow { transform: translateX(3px); }
+
+/* ── FOOTER ── */
+footer {
+  padding: 32px 48px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-left {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-port {
+  font-size: 11px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .grid { grid-template-columns: 1fr; max-width: 420px; }
+  main { padding: 48px 20px; }
+  .header { margin-bottom: 40px; }
+  footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .footer-right { flex-wrap: wrap; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z"/>
+      </svg>
+    </div>
+    <span class="nav-name">HumSabaq AI</span>
+  </div>
+  <div class="nav-right">
+    <span class="live-dot"></span>
+    3 tools running
+  </div>
+</nav>
+
+<!-- Main -->
+<main>
+
+  <div class="header">
+    <div class="header-tag">
+      <span class="live-dot"></span>
+      Student AI Platform
+    </div>
+    <h1>Pick your tool.</h1>
+    <p>Three AI assistants, built for students.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- Timetable Manager -->
+    <a class="card card-1" href="http://localhost:5173" target="_blank" rel="noopener">
+      <div class="card-num">01</div>
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="card-title">Timetable Manager</div>
+      <div class="card-desc">Upload your university timetable and get a smart weekly schedule with AI-powered class reminders.</div>
+      <div class="card-features">
+        <div class="feat"><span class="feat-dot"></span>Timetable parsing via Vision AI</div>
+        <div class="feat"><span class="feat-dot"></span>Email alerts 30 min before class</div>
+        <div class="feat"><span class="feat-dot"></span>AI study tips per subject</div>
+      </div>
+      <div class="card-cta">
+        Open tool
+        <span class="cta-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Document Manager -->
+    <a class="card card-2" href="http://localhost:3000" target="_blank" rel="noopener">
+      <div class="card-num">02</div>
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+      </div>
+      <div class="card-title">Document Manager</div>
+      <div class="card-desc">Upload PDFs or Word docs and chat with your content. Get summaries, quizzes, and flashcards instantly.</div>
+      <div class="card-features">
+        <div class="feat"><span class="feat-dot"></span>Ask questions about any document</div>
+        <div class="feat"><span class="feat-dot"></span>Auto-generate quizzes & flashcards</div>
+        <div class="feat"><span class="feat-dot"></span>Supports PDF, DOCX, TXT</div>
+      </div>
+      <div class="card-cta">
+        Open tool
+        <span class="cta-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- SmartVoice -->
+    <a class="card card-3" href="http://localhost:7860" target="_blank" rel="noopener">
+      <div class="card-num">03</div>
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+      <div class="card-title">SmartVoice</div>
+      <div class="card-desc">Record lectures or upload audio. Get full transcripts with speaker detection, AI summaries, and audio playback.</div>
+      <div class="card-features">
+        <div class="feat"><span class="feat-dot"></span>Multi-speaker diarization</div>
+        <div class="feat"><span class="feat-dot"></span>Noise reduction + 13 languages</div>
+        <div class="feat"><span class="feat-dot"></span>AI summary with TTS playback</div>
+      </div>
+      <div class="card-cta">
+        Open tool
+        <span class="cta-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer>
+  <span class="footer-left">HumSabaq AI Suite · COMSATS University Islamabad</span>
+  <div class="footer-right">
+    <span class="footer-port">Timetable Manager :5173</span>
+    <span class="footer-port">Document Manager :3000</span>
+    <span class="footer-port">SmartVoice :7860</span>
+    <span class="footer-port">Launcher :4000</span>
+  </div>
+</footer>
+
+</body>
+</html>
